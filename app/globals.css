@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    /* Lenis owns scroll smoothness; native smooth-scroll fights it. */
+    scroll-behavior: auto;
+    background: #0a0a0a;
+  }
+
+  body {
+    /* Subtle ambient gradient — single source of color depth, no decoration. */
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108, 43, 217, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 100% 100%, rgba(108, 43, 217, 0.08) 0%, transparent 60%),
+      #0a0a0a;
+    background-attachment: fixed;
+  }
+
+  /* Selection */
+  ::selection {
+    background: #6c2bd9;
+    color: #f8f8f6;
+  }
+
+  /* Scrollbar — minimal, plum-tinted */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(138, 79, 232, 0.2);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(138, 79, 232, 0.4);
+  }
+}
+
+@layer utilities {
+  .cinematic {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* Reduced motion: kill all transforms/animations across the app. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
