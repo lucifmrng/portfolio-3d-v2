@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, Component, ReactNode } from "react";
+import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Earth } from "./Earth";
 import { Character } from "./Character";
@@ -10,11 +10,20 @@ import { OrbitingIcons } from "./OrbitingIcons";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
 import { useDeviceProfile } from "@/hooks/useDeviceProfile";
 
-class SceneErrorBoundary extends Component
-  { children: ReactNode; fallback: ReactNode },
-  { hasError: boolean }
-> {
-  state = { hasError: false };
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class SceneErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError() {
     return { hasError: true };
@@ -25,7 +34,9 @@ class SceneErrorBoundary extends Component
   }
 
   render() {
-    if (this.state.hasError) return this.props.fallback;
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
     return this.props.children;
   }
 }
