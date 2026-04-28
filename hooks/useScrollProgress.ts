@@ -4,33 +4,31 @@ import { useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-/**
- * Global scroll progress (0..1 across the entire document).
- * Read this from the 3D scene to drive camera and character motion.
- *
- * Why a hook + global state instead of per-section triggers in the 3D scene:
- *   The 3D scene runs in its own RAF (R3F's useFrame). If each section
- *   sets up its own ScrollTrigger that pokes at scene state, you fight
- *   yourself: triggers fire in DOM-event order, not frame order. One
- *   global value, sampled inside useFrame, gives you smooth interpolation.
- */
+// Register the plugin synchronously when this module loads in the browser.
+// SmoothScrollProvider also registers it — registration is idempotent, so
+// doing it twice is safe. Doing it zero times is what was breaking us.
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 let _progress = 0;
 const _listeners = new Set<(p: number) => void>();
+let _initialized = false;
 
-if (typeof window !== "undefined") {
-  // Set up exactly one ScrollTrigger that owns the progress value.
-  // Wait for next tick so ScrollTrigger registration in providers completes.
-  queueMicrotask(() => {
-    ScrollTrigger.create({
-      trigger: document.documentElement,
-      start: "top top",
-      end: "bottom bottom",
-      onUpdate: (self) => {
-        _progress = self.progress;
-        _listeners.forEach((fn) => fn(_progress));
-      },
-    });
+function initialize() {
+  if (_initialized) return;
+  if (typeof window === "undefined") return;
+  if (typeof document === "undefined") return;
+
+  _initialized = true;
+  ScrollTrigger.create({
+    trigger: document.documentElement,
+    start: "top top",
+    end: "bottom bottom",
+    onUpdate: (self) => {
+      _progress = self.progress;
+      _listeners.forEach((fn) => fn(_progress));
+    },
   });
 }
 
@@ -40,12 +38,18 @@ export function getScrollProgress(): number {
 
 export function useScrollProgress(): number {
   const [p, setP] = useState(0);
+
   useEffect(() => {
+    // Initialize on first hook usage rather than at module load. By the time
+    // a component is mounted and effects run, the DOM is ready and any other
+    // ScrollTrigger setup has finished.
+    initialize();
     _listeners.add(setP);
     setP(_progress);
     return () => {
       _listeners.delete(setP);
     };
   }, []);
+
   return p;
 }
